@@ -23,10 +23,10 @@
     "number_of_escalations": 0,
     "incident_number": 25482,
     "assigned_to_user": {
-        "email": "david@cloudant.com",
+        "email": "example@cloudant.com",
         "id": "PKXNT86",
         "html_url": "http: //cloudant.pagerduty.com/users/PKXNT86",
-        "name": "DavidTyler"
+        "name": "Example"
     },
     "trigger_details_html_url": "http: //cloudant.pagerduty.com/incidents/P1402J5/log_entries/PUZKPOV",
     "id": "P1402J5"
