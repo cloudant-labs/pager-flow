@@ -14,13 +14,14 @@ VIEW = None
 DB_URL = None
 DB_ID = None
 DB_PASSWD = None
+LOG_FILE = None
 
 
 def config_parse(settings_file):
     config = ConfigParser.ConfigParser()
     config.read(settings_file)
 
-    global PD_API_URL, PD_API_KEY, VIEW, DB_URL, DB_ID, DB_PASSWD
+    global PD_API_URL, PD_API_KEY, VIEW, DB_URL, DB_ID, DB_PASSWD, LOG_FILE
 
     PD_API_URL = config.get('PAGER_DUTY_API','URL')
     PD_API_KEY= config.get('PAGER_DUTY_API','KEY')
@@ -28,6 +29,7 @@ def config_parse(settings_file):
     DB_URL = config.get('DB','URL')
     DB_ID = config.get('DB','ID')
     DB_PASSWD = config.get('DB','PASSWD')
+    LOG_FILE = config.get('LOG_FILE', 'NAME')
 
 
 def _do_pagerduty_request(resource, payload=None):
@@ -174,7 +176,7 @@ def update_last_run(current_run, num_new_updates, num_view_updates=0, updates=No
         log['updated_incidents'] = updates
 
     try:
-        f = open('pagerflow-log.json', 'r')
+        f = open(LOG_FILE, 'r')
         data = json.load(f)
         log['index'] = len(data['history']) + 1
         f.close()
@@ -183,7 +185,7 @@ def update_last_run(current_run, num_new_updates, num_view_updates=0, updates=No
         data['history'] = []
         log['index'] = 1
 
-    f = open('pagerflow-log.json', 'w')
+    f = open(LOG_FILE, 'w')
     data['last_run'] = current_run
     data['number_of_executions'] = log['index']
     data['history'].append(log)
@@ -193,7 +195,7 @@ def update_last_run(current_run, num_new_updates, num_view_updates=0, updates=No
 
 def get_last_run():
     try:
-        with open('pagerflow-log.json', 'r') as json_data:  
+        with open(LOG_FILE, 'r') as json_data:  
             data = json.load(json_data)
             # obtain current state
             last_run = data['last_run']
@@ -245,4 +247,3 @@ def main():
 if __name__=='__main__':
     config_parse(sys.argv[-1])
     main()
-
