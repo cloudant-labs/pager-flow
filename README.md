@@ -5,7 +5,7 @@ This application performs the following tasks:
 
 * Retrieves incident data through PagerDuty API.
 * Constructs a JSON object for each incident.
-* Uploads to Cloudant database.
+* Uploads each incident as a document to Cloudant database.
 
 Configuration
 ---
@@ -23,7 +23,7 @@ Other Notes
 ---
 
 * "unresolved" view must list all of the incidents with a status of "unresolved" from the database.
-* The application will upload ALL incidents on: 
-      - Initial execution
-      - Invalid / Empty log file
+* The application will upload ALL incidents if: 
+      - It is an initial execution
+      - Log file is invalid / empty
       - Log file does not exist under the same directory
