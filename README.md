@@ -5,7 +5,7 @@ This application performs the following tasks:
 
 * Retrieves incident data through PagerDuty API.
 * Constructs a JSON object for each incident.
-* Uploads to Cloudant database.
+* Uploads each incident as a document to Cloudant database.
 
 Configuration
 ---
