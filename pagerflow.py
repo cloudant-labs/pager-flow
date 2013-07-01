@@ -207,6 +207,7 @@ def upload(json_doc):
     headers = {"content-type": "application/json"}
     url = DB_URL+'/_bulk_docs' if 'docs' in json_doc else DB_URL
     resp = requests.post(url, auth=(DB_ID, DB_PASSWD), data=json.dumps(json_doc), headers=headers)
+    print resp
     return resp.status_code in [201, 202]
 
 
