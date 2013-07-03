@@ -94,7 +94,13 @@ def pd_reader(last_run_time):
     updates = set()
     # get unresolved incidents from db view. 
     view = requests.get(VIEW, auth=(DB_ID, DB_PASSWD))
+    print view.status_code
+    print view
+    print
     view = json.loads(view.text)
+    print view
+    print
+   
 
     # get incidents that need updating that are unresolved, if any.
     for incident in view['rows']:
