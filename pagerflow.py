@@ -45,10 +45,7 @@ def _do_pagerduty_request(resource, payload=None):
     data['include[]'] = 'channel'
     r = requests.get(url, headers=headers, params=data)
     r.raise_for_status()
-    print
-    print r.status_code
-    print
-    return r.json()
+    return json.loads(r.text)
 
 
 def get_incidents(offset=0, since=None):
