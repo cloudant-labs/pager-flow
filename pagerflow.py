@@ -43,11 +43,7 @@ def _do_pagerduty_request(resource, payload=None):
     if payload: data=payload
     data['date_range'] = 'all'
     data['include[]'] = 'channel'
-    print DB_URL
-    print ################
     r = requests.get(url, headers=headers, params=data)
-    print DB_URL
-    print ################
     r.raise_for_status()
     return json.loads(r.text)
 
@@ -132,7 +128,11 @@ def pd_reader(last_run_time):
 
 
 def get_rev(_id):
+    print DB_URL
+    print ################
     r = requests.head(DB_URL + "/" + _id, auth=(DB_ID, DB_PASSWD))  
+    print DB_URL
+    print ################
     if r.status_code == 200:
         return r.headers['etag'].strip('"')
     else:
