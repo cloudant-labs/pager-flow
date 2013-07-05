@@ -128,11 +128,7 @@ def pd_reader(last_run_time):
 
 
 def get_rev(_id):
-    print DB_URL
-    print ################
     r = requests.head(DB_URL + "/" + _id, auth=(DB_ID, DB_PASSWD))  
-    print DB_URL
-    print ################
     if r.status_code == 200:
         return r.headers['etag'].strip('"')
     else:
