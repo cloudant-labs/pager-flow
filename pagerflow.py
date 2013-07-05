@@ -36,18 +36,18 @@ def config_parse(settings_file):
 
 
 def _do_pagerduty_request(resource, payload=None):
-    print DB_URL
-    print ################
     url = "%s/%s" % (PD_API_URL, '/'.join(resource))
-    print DB_URL
-    print ################
     auth = "Token token=%s" % (PD_API_KEY)
     headers = {"content-type": 'application/json', "Authorization": auth}
     data = dict()
     if payload: data=payload
     data['date_range'] = 'all'
     data['include[]'] = 'channel'
+    print DB_URL
+    print ################
     r = requests.get(url, headers=headers, params=data)
+    print DB_URL
+    print ################
     r.raise_for_status()
     return json.loads(r.text)
 
