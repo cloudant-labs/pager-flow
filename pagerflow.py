@@ -40,12 +40,15 @@ def _do_pagerduty_request(resource, payload=None):
     auth = "Token token=%s" % (PD_API_KEY)
     headers = {"content-type": 'application/json', "Authorization": auth}
     data = dict()
-    if payload: data=payload
-    data['date_range'] = 'all'
-    data['include[]'] = 'channel'
-    r = requests.get(url, headers=headers, params=data)
+    if payload: 
+        data = payload
+    else:
+        data['date_range'] = 'all'
+    data['include[]'] = ['channel','service']
+    r = requests.get(url, headers=headers, params=data, verify=False)
     r.raise_for_status()
     return json.loads(r.text)
+ 
 
 
 def get_incidents(offset=0, since=None):
@@ -91,35 +94,41 @@ def get_all_incidents(since=None):
 
 
 def pd_reader(last_run_time): 
-    updates = set()
-    # get unresolved incidents from db view. 
-    view = requests.get(VIEW, auth=(DB_ID, DB_PASSWD))
-    view = json.loads(view.text)
-
-    # get incidents that need updating that are unresolved, if any.
-    for incident in view['rows']:
-        # get matching incident from db
-        api_incident = _do_pagerduty_request(['incidents', incident['id'].strip("pd:")])
-        api_time = unix_time(api_incident['last_status_change_on'])
-        db_time = unix_time(incident['value'])
-        if db_time < api_time:
-            updates.add("pd:" + str(api_incident['incident_number']))
-
-    num_view_updates = len(updates)
-
+    updates_set = set()
+    updates = list()
+    num_view_updates = 0
+    
     # get the new incidents created since the last run from API
     if last_run_time:
+        # get unresolved incidents from db view. 
+        view = requests.get(VIEW, auth=(DB_ID, DB_PASSWD))
+        view = json.loads(view.text)
+
+        # get incidents that need updating that are unresolved, if any.
+        for incident in view['rows']:
+            # get matching incident from db
+            api_incident = _do_pagerduty_request(['incidents', incident['id'].strip("pd:")])
+            api_time = unix_time(api_incident['last_status_change_on'])
+            db_time = unix_time(incident['value'])
+            if db_time < api_time:
+                updates_set.add("pd:" + str(api_incident['incident_number']))
+
+        num_view_updates = len(updates_set)
         last_run_time = datetime.utcfromtimestamp(last_run_time)
         for incident in get_all_incidents(last_run_time):
             incident_id = 'pd:' + str(incident['incident_number'])
-            updates.add(incident_id)
+            updates_set.add(incident_id)
         print
         print "unresolved incidents needing update: %s" % num_view_updates
-        print "newly created incidents: %s" % (len(updates) - num_view_updates)  
+        print "newly created incidents: %s" % (len(updates_set) - num_view_updates) 
+        for i in updates_set:
+            updates.append(i) 
     else:
         # initial upload
         for i in range(1, get_count()+1):
-            updates.add('pd:' + str(i))
+            updates_set.add(i)
+        for i in updates_set:
+            updates.append('pd:'+str(i))
 
     print "total number of updates : %s \n" % len(updates)
 
@@ -142,31 +151,32 @@ def get_duration(incident):
 
 
 def get_log(_id):
-    log = _do_pagerduty_request(['incidents', _id, 'log_entries'])
-    i = -1 if len(log['log_entries']) > 1 else 0
-    log_channel = _do_pagerduty_request(['log_entries', log['log_entries'][i]['id']])
-
-    # Strip HTML tags from email body
-    if log_channel['log_entry']['channel']['type'] == 'email':
-        body = log_channel['log_entry']['channel']['body']
-        body = ''.join(BeautifulSoup(body).findAll(text=True))
-        body = body.encode('utf-8').decode('unicode_escape')
-        h = HTMLParser.HTMLParser()
-        log_channel['log_entry']['channel']['untagged_body'] = h.unescape(body)
-
-    return {'log':log['log_entries'], 'log_channel':log_channel['log_entry']}
+    try:
+        log = _do_pagerduty_request(resource=['incidents', _id, 'log_entries'])
+        i = -1 if len(log['log_entries']) > 1 else 0
+        # Strip HTML tags from email body
+        for entry in log['log_entries']:
+            if entry['type'] == 'trigger' and entry['channel']['type'] == 'email':
+                body = entry['channel']['body']
+                body = ''.join(BeautifulSoup(body).findAll(text=True))
+                body = body.encode('utf-8').decode('unicode_escape')
+                h = HTMLParser.HTMLParser()
+                entry['channel']['untagged_body'] = h.unescape(body)
+    except:
+        log = None
+        invalid.append(_id)
+        print invalid
+    
+     return log
 
 
 def doc_builder(incident_id):
-    incident = _do_pagerduty_request(['incidents', incident_id.strip("pd:")])
+    incident = _do_pagerduty_request(resource=['incidents', incident_id.strip("pd:")])
     doc = dict(incident)
     doc['_id'] = ('pd:' + str(incident['incident_number']))
     if doc['status'] == "resolved":
         doc['duration'] = get_duration(incident)
-
-    log_content = get_log(doc['id'])
-    doc['incident_log'] = log_content['log']
-    doc['incident_log'][-1] = log_content['log_channel']
+    doc['incident_log'] =  get_log(doc['id'])
 
     # are we updating an existing or new incident?
     _rev = get_rev(incident_id)
@@ -185,13 +195,12 @@ def update_last_run(current_run, num_new_updates, num_view_updates=0, updates=No
     log['updates_from_unresolved_view'] = num_view_updates
     if (updates):
         log['updated_incidents'] = updates
-
     try:
         f = open(LOG_FILE, 'r')
         data = json.load(f)
         log['index'] = len(data['history']) + 1
         f.close()
-    except:  # if its the first log
+    except:  # if its the first log(no log file)
         data = dict()
         data['history'] = []
         log['index'] = 1
@@ -228,7 +237,7 @@ def unix_time(timestamp):
 
 
 def main():
-    failed = list()
+    failed_incidents = list()
     current_run = calendar.timegm(time.gmtime())
     last_run = get_last_run()
     print "last run : %s" % last_run
@@ -238,7 +247,7 @@ def main():
         json_doc = doc_builder(incident_id)
         print "uploading " + str(incident_id),
         if not upload(json_doc):
-            failed.append(incident_id)
+            failed_incidents.append(incident_id)
     if last_run:
         update_last_run(
             current_run, 
@@ -251,7 +260,7 @@ def main():
         print "initial ",
 
     print 'upload complete.'
-    print failed if failed else ''
+    print failed_incidents if failed_incidents else ''
 
 
 if __name__=='__main__':
