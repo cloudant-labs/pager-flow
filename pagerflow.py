@@ -45,7 +45,16 @@ def _do_pagerduty_request(resource, payload=None):
     else:
         data['date_range'] = 'all'
     data['include[]'] = ['channel','service']
-    r = requests.get(url, headers=headers, params=data, verify=False)
+    cnt = 0
+    # retry request for up to 10 times when it fails
+    while cnt<10:
+        r = requests.get(url, headers=headers, params=data, verify=False)
+        if r.status_code == 200:
+            break
+        else:
+            cnt += 1
+            print "retrying request......"
+
     r.raise_for_status()
     return json.loads(r.text)
  
@@ -164,8 +173,6 @@ def get_log(_id):
                 entry['channel']['untagged_body'] = h.unescape(body)
     except:
         log = None
-        invalid.append(_id)
-        print invalid
     
      return log
 
