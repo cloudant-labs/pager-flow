@@ -174,7 +174,7 @@ def get_log(_id):
     except:
         log = None
     
-     return log
+    return log
 
 
 def doc_builder(incident_id):
