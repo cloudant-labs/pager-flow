@@ -171,6 +171,7 @@ def get_log(_id):
                 body = body.encode('utf-8').decode('unicode_escape')
                 h = HTMLParser.HTMLParser()
                 entry['channel']['untagged_body'] = h.unescape(body)
+        log = log['log_entries']
     except:
         log = None
     
