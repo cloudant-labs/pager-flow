@@ -168,7 +168,7 @@ def get_log(_id):
             body = entry['channel']['body']
             entry['channel']['untagged_body'] = parse_html(body)
 
-        # Add a local time field for assign entry
+        # Add a local time field for each entry
         dest = {'assign': 'assigned_user', 'notify': 'user', 'acknowledge': 'agent',
                 'resolve': 'agent', 'escalate': 'assigned_user', 'annotate': 'agent'}
         if e_type in ['assign','notify','acknowledge',
