@@ -158,25 +158,28 @@ def parse_html(body):
 
 
 def get_log(_id):
-    log = _do_pagerduty_request(resource=['incidents', _id, 'log_entries'])
-    print "b"
+    try:
+        log = _do_pagerduty_request(resource=['incidents', _id, 'log_entries'])
+        print "b"
 
-    for entry in log['log_entries']:
-        e_type = entry['type']
-        # Strip HTML tags from email body
-        if e_type == 'trigger' and entry['channel']['type'] == 'email':
-            body = entry['channel']['body']
-            entry['channel']['untagged_body'] = parse_html(body)
+        for entry in log['log_entries']:
+            e_type = entry['type']
+            # Strip HTML tags from email body
+            if e_type == 'trigger' and entry['channel']['type'] == 'email':
+                body = entry['channel']['body']
+                entry['channel']['untagged_body'] = parse_html(body)
 
-        # Add a local time field for each entry
-        dest = {'assign': 'assigned_user', 'notify': 'user', 'acknowledge': 'agent',
-                'resolve': 'agent', 'escalate': 'assigned_user', 'annotate': 'agent'}
-        if e_type in ['assign','notify','acknowledge',
-                                'resolve','escalate','annotate']:
-            timezone = entry[dest[e_type]]['time_zone']
-            entry['local_created_at'] = from_utc_to(entry['created_at'], timezone) 
-    
-    log = log['log_entries']
+            # Add a local time field for assign entry
+            dest = {'assign': 'assigned_user', 'notify': 'user', 'acknowledge': 'agent',
+                    'resolve': 'agent', 'escalate': 'assigned_user', 'annotate': 'agent'}
+            if e_type in ['assign','notify','acknowledge',
+                                    'resolve','escalate','annotate']:
+                timezone = entry[dest[e_type]]['time_zone']
+                entry['local_created_at'] = from_utc_to(entry['created_at'], timezone) 
+        
+        log = log['log_entries']
+    except:
+        log = None
     return log
 
 
