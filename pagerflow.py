@@ -125,7 +125,7 @@ def pd_reader(last_run_time):
         print "newly created incidents: %s" % (len(updates_set) - num_view_updates) 
     else:
         # initial upload
-        for i in range(667, get_count()+1):
+        for i in range(1, get_count()+1):
             updates_set.add(i)
    
     for i in updates_set:
