@@ -45,13 +45,13 @@ def _do_pagerduty_request(resource, payload=None):
         data = payload
     data['date_range'] = 'all'
     data['include[]'] = ['channel','service']
+
     cnt = 0
     while cnt<10:   # retry request for up to 10 times when it fails
         try:
             r = requests.get(url, headers=headers, params=data, verify=False)
-            if r.status_code == 200:
-                return json.loads(r.text)
-                break
+            return json.loads(r.text)
+            break
         except:
             cnt += 1
             print "retrying request......"
@@ -125,7 +125,7 @@ def pd_reader(last_run_time):
         print "newly created incidents: %s" % (len(updates_set) - num_view_updates) 
     else:
         # initial upload
-        for i in range(19981, get_count()+1):
+        for i in range(667, get_count()+1):
             updates_set.add(i)
    
     for i in updates_set:
@@ -137,11 +137,17 @@ def pd_reader(last_run_time):
 
 
 def get_rev(_id):
-    r = requests.head(DB_URL + "/" + _id, auth=(DB_ID, DB_PASSWD))  
-    if r.status_code == 200:
-        return r.headers['etag'].strip('"')
-    else:
-        return None
+    cnt=0
+    while cnt<10:
+        try:
+            r = requests.head(DB_URL + "/" + _id, auth=(DB_ID, DB_PASSWD))  
+            if r.status_code == 200:
+                return r.headers['etag'].strip('"')
+            else:
+                return None
+        except:
+            cnt+=1
+
         
 
 def get_duration(incident):
@@ -161,7 +167,6 @@ def get_log(_id):
     try:
         log = _do_pagerduty_request(resource=['incidents', _id, 'log_entries'])
         print "b"
-
         for entry in log['log_entries']:
             e_type = entry['type']
             # Strip HTML tags from email body
