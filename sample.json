@@ -1,33 +1,190 @@
 {
-    "status": "triggered",
-    "_id": "pd: 25482",
-    "service": {
-        "deleted_at": null,
-        "id": "P15XV9J",
-        "html_url": "http: //cloudant.pagerduty.com/services/P15XV9J",
-        "name": "GoldSupport"
+    'status': 'resolved',
+    '_rev': '1-bb15ed6b38d08ff67f90076fef6a23c2',
+    'last_status_change_on': '2012-12-21T21: 03: 43Z',
+    'html_url': 'http: //cloudant.pagerduty.com/incidents/PY7GWFH',
+    'created_on': '2012-12-21T20: 58: 20Z',
+    'trigger_summary_data': {
+        'subject': 'Allowpersistentcookies'
     },
-    "trigger_type": "web_trigger",
-    "escalation_policy": {
-        "id": "PD6WLOP",
-        "name": "GoldSupport"
+    'number_of_escalations': 0,
+    'duration': 323,
+    'assigned_to_user': None,
+    'id': 'PY7GWFH',
+    '_id': 'pd: 10827',
+    'service': {
+        'deleted_at': '2013-03-16T15: 35: 33Z',
+        'id': 'PGSVUHD',
+        'html_url': 'http: //cloudant.pagerduty.com/services/PGSVUHD',
+        'name': 'SilverSupport'
     },
-    "last_status_change_on": "2013-06-27T23: 53: 52Z",
-    "html_url": "http: //cloudant.pagerduty.com/incidents/P1402J5",
-    "last_status_change_by": null,
-    "incident_key": null,
-    "trigger_summary_data": {
-        "subject": "THISISATEST"
+    'trigger_type': 'email_trigger',
+    'escalation_policy': None,
+    'last_status_change_by': {
+        'email': 'example@cloudant.com',
+        'id': 'P0TBFV6',
+        'html_url': 'http: //cloudant.pagerduty.com/users/P0TBFV6',
+        'name': 'example'
     },
-    "created_on": "2013-06-27T23: 53: 52Z",
-    "number_of_escalations": 0,
-    "incident_number": 25482,
-    "assigned_to_user": {
-        "email": "example@cloudant.com",
-        "id": "PKXNT86",
-        "html_url": "http: //cloudant.pagerduty.com/users/PKXNT86",
-        "name": "Example"
+    'incident_key': None,
+    'incident_number': 10827,
+    'resolved_by_user': {
+        'email': 'example@cloudant.com',
+        'id': 'P0TBFV6',
+        'html_url': 'http: //cloudant.pagerduty.com/users/P0TBFV6',
+        'name': 'example'
     },
-    "trigger_details_html_url": "http: //cloudant.pagerduty.com/incidents/P1402J5/log_entries/PUZKPOV",
-    "id": "P1402J5"
+    'trigger_details_html_url': 'http: //cloudant.pagerduty.com/incidents/PY7GWFH/log_entries/P06K9CA',
+    'incident_log': [
+        {
+            'service': {
+                'html_url': 'http: //cloudant.pagerduty.com/services/PGSVUHD',
+                'escalation_policy_id': 'P4RRXUX',
+                'id': 'PGSVUHD',
+                'integration_email': 'silver-support@cloudant.pagerduty.com',
+                'name': 'SilverSupport'
+            },
+            'created_at': '2012-12-21T21: 03: 43Z',
+            'agent': {
+                'marketing_opt_out': True,
+                'name': 'UlisesCervino',
+                'user_url': '/users/P0TBFV6',
+                'color': 'deep-pink',
+                'time_zone': 'London',
+                'id': 'P0TBFV6',
+                'avatar_url': 'https: //secure.gravatar.com/avatar/085943dc830c508be4d7b6ed865d5864.png?d=mm&r=PG',
+                'role': 'admin',
+                'invitation_sent': False,
+                'type': 'user',
+                'email': 'example@cloudant.com'
+            },
+            'local_created_at': '2012-12-21T22: 03: 43',
+            'type': 'resolve',
+            'id': 'P5G9JYG',
+            'channel': {
+                'type': 'website'
+            }
+        },
+        {
+            'service': {
+                'html_url': 'http: //cloudant.pagerduty.com/services/PGSVUHD',
+                'escalation_policy_id': 'P4RRXUX',
+                'id': 'PGSVUHD',
+                'integration_email': 'silver-support@cloudant.pagerduty.com',
+                'name': 'SilverSupport'
+            },
+            'notification': {
+                'status': 'success',
+                'type': 'sms',
+                'address': '+1708-555-5555'
+            },
+            'created_at': '2012-12-21T21: 03: 24Z',
+            'local_created_at': '2012-12-21T17: 03: 24',
+            'user': {
+                'marketing_opt_out': False,
+                'name': 'example',
+                'user_url': '/users/P3H0JYP',
+                'color': 'brown',
+                'time_zone': 'EasternTime(US&Canada)',
+                'id': 'P3H0JYP',
+                'avatar_url': 'https: //secure.gravatar.com/avatar/46f897786f8286effc49538e2c866d7f.png?d=mm&r=PG',
+                'role': 'admin',
+                'invitation_sent': False,
+                'email': 'example@cloudant.com'
+            },
+            'type': 'notify',
+            'id': 'PH94C27'
+        },
+        {
+            'service': {
+                'html_url': 'http: //cloudant.pagerduty.com/services/PGSVUHD',
+                'escalation_policy_id': 'P4RRXUX',
+                'id': 'PGSVUHD',
+                'integration_email': 'silver-support@cloudant.pagerduty.com',
+                'name': 'SilverSupport'
+            },
+            'notification': {
+                'status': 'success',
+                'type': 'email',
+                'address': 'example@cloudant.com'
+            },
+            'created_at': '2012-12-21T20: 58: 21Z',
+            'local_created_at': '2012-12-21T16: 58: 21',
+            'user': {
+                'marketing_opt_out': False,
+                'name': 'example',
+                'user_url': '/users/P3H0JYP',
+                'color': 'brown',
+                'time_zone': 'EasternTime(US&Canada)',
+                'id': 'P3H0JYP',
+                'avatar_url': 'https: //secure.gravatar.com/avatar/46f897786f8286effc49538e2c866d7f.png?d=mm&r=PG',
+                'role': 'admin',
+                'invitation_sent': False,
+                'email': 'example@cloudant.com'
+            },
+            'type': 'notify',
+            'id': 'PFTI9N'
+        },
+        {
+            'service': {
+                'html_url': 'http: //cloudant.pagerduty.com/services/PGSVUHD',
+                'escalation_policy_id': 'P4RRXUX',
+                'id': 'PGSVUHD',
+                'integration_email': 'silver-support@cloudant.pagerduty.com',
+                'name': 'SilverSupport'
+            },
+            'created_at': '2012-12-21T20: 58: 20Z',
+            'agent': {
+                'type': 'service'
+            },
+            'local_created_at': '2012-12-21T16: 58: 20',
+            'assigned_user': {
+                'marketing_opt_out': False,
+                'name': 'example',
+                'user_url': '/users/P3H0JYP',
+                'color': 'brown',
+                'time_zone': 'EasternTime(US&Canada)',
+                'id': 'P3H0JYP',
+                'avatar_url': 'https: //secure.gravatar.com/avatar/46f897786f8286effc49538e2c866d7f.png?d=mm&r=PG',
+                'role': 'admin',
+                'invitation_sent': False,
+                'email': 'example@cloudant.com'
+            },
+            'type': 'assign',
+            'id': 'PJ369MH',
+            'channel': {
+                'type': 'auto'
+            }
+        },
+        {
+            'service': {
+                'html_url': 'http: //cloudant.pagerduty.com/services/PGSVUHD',
+                'escalation_policy_id': 'P4RRXUX',
+                'id': 'PGSVUHD',
+                'integration_email': 'silver-support@cloudant.pagerduty.com',
+                'name': 'SilverSupport'
+            },
+            'created_at': '2012-12-21T20: 58: 20Z',
+            'agent': {
+                'type': 'service'
+            },
+            'type': 'trigger',
+            'id': 'P06K9CA',
+            'channel': {
+                'body': 'Hi,
+                <div><br></div><div>This is an example.</div>\n\n<div><br></div><div></div><div>example</div>\n',
+                'raw_url': '/incidents/PY7GWFH/log_entries/P06K9CA/show_raw_details',
+                'from': 'ElgerLambert<example@gmail.com>',
+                'body_content_type': 'text/html',
+                'html_url': '/incidents/PY7GWFH/log_entries/P06K9CA/show_html_details',
+                'summary': 'Allowpersistentcookies',
+                'to': 'support@cloudant.com',
+                'untagged_body': 'Hi,
+                This is an example.
+                ElgerLambert',
+                'type': 'email',
+                'subject': 'Allowpersistentcookies'
+            }
+        }
+    ]
 }
