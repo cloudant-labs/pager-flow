@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import tz
 import sys
 import json
 import time
@@ -7,8 +8,8 @@ import calendar
 import requests
 import HTMLParser
 import ConfigParser
-from datetime import datetime
 from BeautifulSoup import BeautifulSoup
+from datetime import datetime, timedelta, tzinfo
 
 
 PD_API_URL = None
@@ -42,29 +43,24 @@ def _do_pagerduty_request(resource, payload=None):
     data = dict()
     if payload: 
         data = payload
-    else:
-        data['date_range'] = 'all'
+    data['date_range'] = 'all'
     data['include[]'] = ['channel','service']
     cnt = 0
-    # retry request for up to 10 times when it fails
-    while cnt<10:
-        r = requests.get(url, headers=headers, params=data, verify=False)
-        if r.status_code == 200:
-            break
-        else:
+    while cnt<10:   # retry request for up to 10 times when it fails
+        try:
+            r = requests.get(url, headers=headers, params=data, verify=False)
+            if r.status_code == 200:
+                return json.loads(r.text)
+                break
+        except:
             cnt += 1
             print "retrying request......"
-
-    r.raise_for_status()
-    return json.loads(r.text)
- 
 
 
 def get_incidents(offset=0, since=None):
     payload = dict()
     if since:
         payload['since'] = since.isoformat()
-
     payload['sort_by'] = "created_on:asc"
     payload['offset'] = offset
     return _do_pagerduty_request(['incidents'], payload)
@@ -81,7 +77,6 @@ def get_count(since=None):
 def get_all_incidents(since=None):
     offset = get_count(since=since)
     fetched = 0
-
     while True:
         # Get incidents at offset
         incidents = get_incidents(offset=offset,since=since)
@@ -95,7 +90,6 @@ def get_all_incidents(since=None):
         total = int(incidents['total'])
         limit = int(incidents['limit'])
         print "fetched %d of %d" % (fetched, total)     
-
         if fetched < total:
             offset -= limit
         else:
@@ -106,7 +100,7 @@ def pd_reader(last_run_time):
     updates_set = set()
     updates = list()
     num_view_updates = 0
-    
+    cnt = 0
     # get the new incidents created since the last run from API
     if last_run_time:
         # get unresolved incidents from db view. 
@@ -120,25 +114,22 @@ def pd_reader(last_run_time):
             api_time = unix_time(api_incident['last_status_change_on'])
             db_time = unix_time(incident['value'])
             if db_time < api_time:
-                updates_set.add("pd:" + str(api_incident['incident_number']))
+                updates_set.add(api_incident['incident_number'])
 
         num_view_updates = len(updates_set)
         last_run_time = datetime.utcfromtimestamp(last_run_time)
         for incident in get_all_incidents(last_run_time):
-            incident_id = 'pd:' + str(incident['incident_number'])
-            updates_set.add(incident_id)
+            updates_set.add(incident['incident_number'])
         print
         print "unresolved incidents needing update: %s" % num_view_updates
         print "newly created incidents: %s" % (len(updates_set) - num_view_updates) 
-        for i in updates_set:
-            updates.append(i) 
     else:
         # initial upload
-        for i in range(1, get_count()+1):
+        for i in range(19981, get_count()+1):
             updates_set.add(i)
-        for i in updates_set:
-            updates.append('pd:'+str(i))
-
+   
+    for i in updates_set:
+        updates.append('pd:' + str(i))
     print "total number of updates : %s \n" % len(updates)
 
     return {'updates':updates, 'num_view_updates':num_view_updates, 
@@ -159,27 +150,39 @@ def get_duration(incident):
     return t_resolved - t_created
 
 
+def parse_html(body):
+    body = ''.join(BeautifulSoup(body).findAll(text=True))
+    body = body.encode('utf-8').decode('unicode_escape')
+    h = HTMLParser.HTMLParser()
+    return h.unescape(body)
+
+
 def get_log(_id):
-    try:
-        log = _do_pagerduty_request(resource=['incidents', _id, 'log_entries'])
-        i = -1 if len(log['log_entries']) > 1 else 0
+    log = _do_pagerduty_request(resource=['incidents', _id, 'log_entries'])
+    print "b"
+
+    for entry in log['log_entries']:
+        e_type = entry['type']
         # Strip HTML tags from email body
-        for entry in log['log_entries']:
-            if entry['type'] == 'trigger' and entry['channel']['type'] == 'email':
-                body = entry['channel']['body']
-                body = ''.join(BeautifulSoup(body).findAll(text=True))
-                body = body.encode('utf-8').decode('unicode_escape')
-                h = HTMLParser.HTMLParser()
-                entry['channel']['untagged_body'] = h.unescape(body)
-        log = log['log_entries']
-    except:
-        log = None
+        if e_type == 'trigger' and entry['channel']['type'] == 'email':
+            body = entry['channel']['body']
+            entry['channel']['untagged_body'] = parse_html(body)
+
+        # Add a local time field for assign entry
+        dest = {'assign': 'assigned_user', 'notify': 'user', 'acknowledge': 'agent',
+                'resolve': 'agent', 'escalate': 'assigned_user', 'annotate': 'agent'}
+        if e_type in ['assign','notify','acknowledge',
+                                'resolve','escalate','annotate']:
+            timezone = entry[dest[e_type]]['time_zone']
+            entry['local_created_at'] = from_utc_to(entry['created_at'], timezone) 
     
+    log = log['log_entries']
     return log
 
 
 def doc_builder(incident_id):
     incident = _do_pagerduty_request(resource=['incidents', incident_id.strip("pd:")])
+    print "a",
     doc = dict(incident)
     doc['_id'] = ('pd:' + str(incident['incident_number']))
     if doc['status'] == "resolved":
@@ -235,13 +238,30 @@ def get_last_run():
 
 def upload(json_doc):
     headers = {"content-type": "application/json"}
-    resp = requests.post(DB_URL, auth=(DB_ID, DB_PASSWD), data=json.dumps(json_doc), headers=headers)
-    print resp
-    return resp.status_code in [201, 202]
+    cnt = 0
+    while cnt<10:   # retry request up to 10 times if fails.
+        try:
+            resp = requests.post(DB_URL, auth=(DB_ID, DB_PASSWD), data=json.dumps(json_doc), headers=headers)
+            print resp
+            return resp.status_code in [201, 202]
+            break
+        except:
+            cnt+=1
+    return None
 
 
 def unix_time(timestamp):
     return calendar.timegm(time.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ"))
+
+
+def from_utc_to(date_str, timezone):
+    offset_str = tz.timezones[timezone]
+    date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ")
+    hours = int(offset_str.lstrip('+,-')[:2])
+    minutes = int(offset_str.lstrip('+,-')[2:])
+    sign = -1 if offset_str.startswith('-') else 1
+    offset = timedelta(hours=hours, minutes=minutes) * sign
+    return (date+offset).isoformat()
 
 
 def main():
@@ -268,9 +288,15 @@ def main():
         print "initial ",
 
     print 'upload complete.'
-    print failed_incidents if failed_incidents else ''
+    if failed_incidents:
+        print "Incidents failed to upload : ",
+        for i in failed_incidents:
+            print i,
+            print ", "
 
 
 if __name__=='__main__':
     config_parse(sys.argv[-1])
     main()
+
+
