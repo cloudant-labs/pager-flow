@@ -165,7 +165,6 @@ def parse_html(body):
 def get_log(_id):
     try:
         log = _do_pagerduty_request(resource=['incidents', _id, 'log_entries'])
-        print "b"
         for entry in log['log_entries']:
             e_type = entry['type']
             # Strip HTML tags from email body
@@ -191,7 +190,6 @@ def get_log(_id):
 
 def doc_builder(incident_id):
     incident = _do_pagerduty_request(resource=['incidents', incident_id.strip("pd:")])
-    print "a",
     doc = dict(incident)
     doc['_id'] = ('pd:' + str(incident['incident_number']))
     if doc['status'] == "resolved":
