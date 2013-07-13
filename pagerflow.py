@@ -149,7 +149,6 @@ def get_rev(_id):
             cnt+=1
 
         
-
 def get_duration(incident):
     t_created = unix_time(incident['created_on'])
     t_resolved = unix_time(incident['last_status_change_on'])
@@ -166,6 +165,7 @@ def parse_html(body):
 def get_log(_id):
     try:
         log = _do_pagerduty_request(resource=['incidents', _id, 'log_entries'])
+        print "b"
         for entry in log['log_entries']:
             e_type = entry['type']
             # Strip HTML tags from email body
@@ -176,11 +176,13 @@ def get_log(_id):
             # Add a local time field for assign entry
             dest = {'assign': 'assigned_user', 'notify': 'user', 'acknowledge': 'agent',
                     'resolve': 'agent', 'escalate': 'assigned_user', 'annotate': 'agent'}
-            if e_type in ['assign','notify','acknowledge',
-                                    'resolve','escalate','annotate']:
-                timezone = entry[dest[e_type]]['time_zone']
-                entry['local_created_at'] = from_utc_to(entry['created_at'], timezone) 
-        
+            entries = ['assign','notify','acknowledge', 'resolve','escalate','annotate']
+            if e_type in entries:
+                try:      
+                    timezone = entry[dest[e_type]]['time_zone']
+                    entry['local_created_at'] = from_utc_to(entry['created_at'], timezone) 
+                except:
+                    None
         log = log['log_entries']
     except:
         log = None
@@ -189,6 +191,7 @@ def get_log(_id):
 
 def doc_builder(incident_id):
     incident = _do_pagerduty_request(resource=['incidents', incident_id.strip("pd:")])
+    print "a",
     doc = dict(incident)
     doc['_id'] = ('pd:' + str(incident['incident_number']))
     if doc['status'] == "resolved":
@@ -199,7 +202,6 @@ def doc_builder(incident_id):
     _rev = get_rev(incident_id)
     if _rev:
         doc['_rev'] = _rev
-
     return doc
 
 
@@ -304,5 +306,4 @@ def main():
 if __name__=='__main__':
     config_parse(sys.argv[-1])
     main()
-
 
