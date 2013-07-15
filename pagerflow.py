@@ -170,7 +170,7 @@ def get_log(_id):
             # Strip HTML tags from email body
             if e_type == 'trigger' and entry['channel']['type'] == 'email':
                 body = entry['channel']['body']
-                entry['channel']['untagged_body'] = parse_html(body)
+                entry['channel']['body_text'] = parse_html(body)
 
             # Add a local time field for assign entry
             dest = {'assign': 'assigned_user', 'notify': 'user', 'acknowledge': 'agent',
