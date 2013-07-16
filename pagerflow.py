@@ -100,7 +100,6 @@ def pd_reader(last_run_time):
     updates_set = set()
     updates = list()
     num_view_updates = 0
-    cnt = 0
     # get the new incidents created since the last run from API
     if last_run_time:
         # get unresolved incidents from db view. 
@@ -290,7 +289,7 @@ def main():
             output['updates']
         )
     else: # initial upload
-        update_last_run(current_run, get_count())
+        update_last_run(current_run, output['num_new_updates'])
         print "initial ",
 
     print 'upload complete.'
