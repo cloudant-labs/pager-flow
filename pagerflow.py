@@ -100,14 +100,12 @@ def pd_reader(last_run_time):
     updates = list()
     num_view_updates = 0
     # get the new incidents created since the last run from API
-    print 'testing.........'
     if last_run_time:
         # get unresolved incidents from view.
         cnt=0
         while cnt<10: 
             try:
                 view = requests.get(VIEW, auth=(DB_ID, DB_PASSWD))
-                print view.status_code
                 break
             except:
                 cnt+=1
