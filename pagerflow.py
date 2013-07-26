@@ -47,7 +47,7 @@ def _do_pagerduty_request(resource, payload=None):
     data['include[]'] = ['channel','service']
 
     cnt = 0
-    while cnt<10:   # retry request for up to 10 times when it fails
+    while cnt<10:   # retry request for up to 10 times if failed
         try:
             r = requests.get(url, headers=headers, params=data, verify=False)
             return json.loads(r.text)
@@ -84,7 +84,6 @@ def get_all_incidents(since=None):
         # yield incidents
         for i in incidents_list:
             yield i
-
         # Check for more incidents
         fetched += len(incidents['incidents'])
         total = int(incidents['total'])
@@ -102,8 +101,16 @@ def pd_reader(last_run_time):
     num_view_updates = 0
     # get the new incidents created since the last run from API
     if last_run_time:
-        # get unresolved incidents from db view. 
-        view = requests.get(VIEW, auth=(DB_ID, DB_PASSWD))
+        # get unresolved incidents from view.
+        cnt=0
+        while cnt<10: 
+            try:
+                view = requests.get(VIEW, auth=(DB_ID, DB_PASSWD))
+                break;
+            except:
+                cnt+=1
+                "retrying request......"
+
         view = json.loads(view.text)
 
         # get incidents that need updating that are unresolved, if any.
