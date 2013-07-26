@@ -106,7 +106,7 @@ def pd_reader(last_run_time):
         while cnt<10: 
             try:
                 view = requests.get(VIEW, auth=(DB_ID, DB_PASSWD))
-                break;
+                break
             except:
                 cnt+=1
                 "retrying request......"
